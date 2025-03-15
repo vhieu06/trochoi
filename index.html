@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập và Đăng ký</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #f0f2f5;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 360px;
+        }
+        h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #333;
+            font-weight: bold;
+        }
+        .input-field {
+            width: calc(100% - 24px);
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            background: #fff;
+        }
+        .input-field:focus {
+            border-color: #1877f2;
+            outline: none;
+            box-shadow: 0 0 6px rgba(24, 119, 242, 0.2);
+        }
+        .button {
+            width: 100%;
+            padding: 12px;
+            background: #1877f2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .button:hover {
+            background: #125abe;
+        }
+        .link {
+            display: block;
+            margin-top: 14px;
+            color: #1877f2;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .link:hover {
+            text-decoration: underline;
+        }
+        .error {
+            color: red;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="login-form">
+        <h2>Đăng nhập</h2>
+        <input type="text" id="login-username" class="input-field" placeholder="Tên tài khoản hoặc Email">
+        <input type="password" id="login-password" class="input-field" placeholder="Mật khẩu">
+        <button class="button" onclick="login()">Xác nhận</button>
+        <a href="#" class="link" onclick="showRegister()">Chưa có tài khoản? Đăng ký</a>
+        <p id="login-error" class="error"></p>
+    </div>
+
+    <div class="container" id="register-form" style="display: none;">
+        <h2>Đăng ký</h2>
+        <input type="text" id="register-username" class="input-field" placeholder="Tên tài khoản">
+        <input type="password" id="register-password" class="input-field" placeholder="Mật khẩu">
+        <button class="button" onclick="register()">Đăng ký</button>
+        <a href="#" class="link" onclick="showLogin()">Đã có tài khoản? Đăng nhập</a>
+        <p id="register-error" class="error"></p>
+    </div>
+
+    <script>
+        // Lưu trữ người dùng trong localStorage
+        let users = JSON.parse(localStorage.getItem('users')) || {};
+
+        function showRegister() {
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('register-form').style.display = 'block';
+            document.getElementById('register-error').textContent = '';
+        }
+
+        function showLogin() {
+            document.getElementById('register-form').style.display = 'none';
+            document.getElementById('login-form').style.display = 'block';
+            document.getElementById('login-error').textContent = '';
+        }
+
+        function register() {
+            let username = document.getElementById('register-username').value.trim();
+            let password = document.getElementById('register-password').value.trim();
+            let errorMessage = document.getElementById('register-error');
+
+            // Kiểm tra tên người dùng và mật khẩu
+            if (!username || !password) {
+                errorMessage.textContent = 'Vui lòng nhập đầy đủ thông tin!';
+                return;
+            }
+
+            if (!/^[a-z0-9]{4,20}$/.test(username)) {
+                errorMessage.textContent = 'Tên tài khoản phải từ 4-20 ký tự và chỉ chứa a-z, 0-9!';
+                return;
+            }
+
+            if (!/^[a-z0-9]{6,20}$/.test(password)) {
+                errorMessage.textContent = 'Mật khẩu phải từ 6-20 ký tự và chỉ chứa a-z, 0-9!';
+                return;
+            }
+
+            if (users[username]) {
+                errorMessage.textContent = 'Tên tài khoản đã tồn tại!';
+                return;
+            }
+
+            // Lưu thông tin người dùng và số dư mặc định
+            users[username] = {
+                password: password,
+                balance: 1000000 // Số dư mặc định
+            };
+            localStorage.setItem('users', JSON.stringify(users));
+            alert('Đăng ký thành công! Vui lòng đăng nhập.');
+            showLogin();
+        }
+
+        function login() {
+            let username = document.getElementById('login-username').value.trim();
+            let password = document.getElementById('login-password').value.trim();
+            let errorMessage = document.getElementById('login-error');
+
+            // Kiểm tra thông tin đăng nhập
+            if (!username || !password) {
+                errorMessage.textContent = 'Vui lòng nhập đầy đủ thông tin!';
+                return;
+            }
+
+            // Kiểm tra nếu là tài khoản quản trị viên
+            if (username === "admin" && password === "admin12") {
+                alert('Đăng nhập thành công với tư cách quản trị viên!');
+                showAdminPanel();
+                return;
+            }
+
+            if (!users[username]) {
+                errorMessage.textContent = 'Tên tài khoản không tồn tại!';
+                return;
+            }
+
+            if (users[username].password !== password) {
+                errorMessage.textContent = 'Mật khẩu không chính xác!';
+                return;
+            }
+
+            alert('Đăng nhập thành công!');
+            // Lưu tên người dùng hiện tại vào localStorage
+            localStorage.setItem('currentUser', username);
+            // Chuyển hướng đến trang kết quả
+            window.location.href = "ketqua.html";
+        }
+
+        function showAdminPanel() {
+            document.body.innerHTML = `
+                <div class="container">
+                    <h2>Quản trị viên - Danh sách tài khoản</h2>
+                    <table border="1" cellspacing="0" cellpadding="8">
+                        <thead>
+                            <tr>
+                                <th>Tên tài khoản</th>
+                                <th>Mật khẩu</th>
+                                <th>Số dư</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-list"></tbody>
+                    </table>
+                    <h3>Cộng tiền cho tài khoản</h3>
+                    <input type="text" id="target-username" placeholder="Nhập tên tài khoản">
+                    <input type="number" id="amount" placeholder="Số tiền">
+                    <button onclick="addMoney()">Cộng tiền</button>
+                    <p id="admin-message" style="color: red;"></p>
+                </div>
+            `;
+
+            let userList = document.getElementById("user-list");
+            for (let user in users) {
+                if (user !== "admin") {
+                    userList.innerHTML += `
+                        <tr>
+                            <td>${user}</td>
+                            <td>${users[user].password}</td>
+                            <td>${users[user].balance.toLocaleString()} VNĐ</td>
+                            <td><button onclick="deleteUser('${user}')">Xóa</button></td>
+                        </tr>
+                    `;
+                }
+            }
+        }
+
+        function addMoney() {
+            let username = document.getElementById('target-username').value.trim();
+            let amount = parseInt(document.getElementById('amount').value);
+            let message = document.getElementById('admin-message');
+
+            if (!users[username]) {
+                message.textContent = "Tài khoản không tồn tại!";
+                return;
+            }
+
+            if (isNaN(amount) || amount <= 0) {
+                message.textContent = "Số tiền không hợp lệ!";
+                return;
+            }
+
+            users[username].balance += amount;
+            localStorage.setItem('users', JSON.stringify(users));
+            message.textContent = `Đã cộng ${amount.toLocaleString()} VNĐ cho tài khoản ${username}!`;
+
+            // Cập nhật lại danh sách người dùng
+            showAdminPanel();
+        }
+
+        function deleteUser(username) {
+            if (username === "admin") {
+                alert("Không thể xóa tài khoản quản trị viên!");
+                return;
+            }
+
+            if (confirm(`Bạn có chắc muốn xóa tài khoản ${username}?`)) {
+                delete users[username];
+                localStorage.setItem('users', JSON.stringify(users));
+                showAdminPanel();
+            }
+        }
+
+        // Xử lý sự kiện nhấn phím Enter
+        document.addEventListener("keydown", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                let loginForm = document.getElementById("login-form");
+                let registerForm = document.getElementById("register-form");
+                if (loginForm.style.display !== "none") {
+                    login();
+                } else if (registerForm.style.display !== "none") {
+                    register();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
